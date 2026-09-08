@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Каталог</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <div class="catalog-page">
+      <h1 class="page-title">Каталог каналов</h1>
+
+      <!-- фильтр = GET-форма, input из дизайна -->
+      <form method="GET" action="/catalog">
+        <input type="number" class="filter-input" name="minSubscribers"
+               placeholder="Показать каналы с подписчиками от..."
+               value="{{currentFilter}}">
+      </form>
+
+      <div class="channels-grid">
+        {{#each catalogChannels}}
+          <a href="/feed/{{this.id}}" class="channel-card">
+            <video class="feed-video" src="{{this.videoUrl}}" autoplay muted loop playsinline></video>
+            <div class="card-info">
+              <div class="card-name">{{this.name}}</div>
+              <div class="card-stats">
+                <span>🔁 {{this.repostsCount}}</span>
+                <span>👥 {{this.subscribersCount}}</span>
+              </div>
+            </div>
+          </a>
+        {{else}}
+          <p style="grid-column: 1 / -1; text-align:center; color:#4E5969; padding: 40px 0;">
+            По вашему фильтру ничего не найдено 🤷
+          </p>
+        {{/each}}
+      </div>
+    </div>
+
+    {{> navbar}}
+  </div>
+</body>
+</html>
