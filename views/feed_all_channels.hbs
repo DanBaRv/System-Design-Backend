@@ -10,14 +10,20 @@
   <div class="app-container">
     <div class="feed-page">
 
-      <!-- пока картинка; после MinIO заменим на <video> -->
           <video class="feed-video" src="{{channel.videoUrl}}" autoplay muted loop playsinline></video>
       
       <div class="feed-side-actions">
 
+          <!-- исправление лайки
           <div class="action-btn">
             <svg class="action-icon" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
           </div>
+          -->
+
+          <button class="action-img" type="button">
+            <svg class="action-icon" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            <span>{{likes}}</span>
+          </button>
 
           <div class="action-btn">
             <svg class="action-icon" fill="currentColor" viewBox="0 0 24 24"><path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z"/></svg>
@@ -46,29 +52,41 @@
 
       <div class="feed-overlay">
 
-        <!-- 1) шапка: аватар + @имя + подписаться -->
+        <!-- 1) шапка: аватар + @имя + подписаться 
         <div class="channel-header">
           <img src="{{channel.coverUrl}}" alt="{{channel.name}}" class="channel-avatar">
           <span class="channel-name">@{{channel.username}}</span>
           <button class="follow-btn">Подписаться</button>
-        </div>
+        </div>-->
 
         <!-- 2) статистика -->
         <div class="channel-stats">
-          <div>👥 Подписчиков: {{channel.subscribersCount}}</div>
-          <div>👁️ Средний охват: {{channel.averageReach}}</div>
-          <div>💸 Цена поста: {{channel.adPrice}} ₽</div>
-        </div>
+    <div class="stat-row">
+        <span>Подписчиков: {{channel.subscribersCount}}</span>
+        <span class="icon">👥</span>
+    </div>
+    <div class="stat-row">
+        <span>Средний охват: {{channel.averageReach}}</span>
+        <span class="icon">📊</span>
+    </div>
+    <div class="stat-row">
+        <span>Цена поста: {{channel.adPrice}} ₽</span>
+        <span class="icon">💰</span>
+    </div>
+</div>
 
         <!-- 3) описание -->
-        <div class="feed-description">{{channel.description}}</div>
+        <!--исправлено описание еще-->
+      <div class="feed-description">
+        <div class="desc-text">{{channel.description}}</div>
+        <a href="/feedchannels/{{channel.id}}?next=false" class="more-link">ещё</a>
+      </div>
 
-        <!-- 4) кнопка — ПОСЛЕДНИЙ элемент потока = всегда ниже всех -->
-        <a href="/feed/{{channel.id}}?next=true" class="next-btn">Следующий канал</a>
+        <a href="/feedchannels/{{channel.id}}?next=true" class="next-btn">Следующий канал</a>
       </div>
     </div>
 
-    {{> navbar}}
+    {{> channels_navbar}}
   </div>
 </body>
 </html>

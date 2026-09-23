@@ -1,21 +1,22 @@
 export interface Channels {
-    id: number,
-    name: string,
-    username: string,
-    topic: string,
-    subscribersCount: number,
-    averageReach: number,
-    adPrice: number,
-    repostsCount: number,
-    commentsCount: number,
-    description: string,
-    status: 'published' | 'draft' | 'deleted',
-    coverUrl: string,
-    videoUrl: string,
-    nextId?: number
+  id: number;
+  name: string;
+  username: string;
+  topic: string;
+  subscribersCount: number;
+  averageReach: number;
+  adPrice: number;
+  repostsCount: number;
+  commentsCount: number;
+  description: string;
+  status: 'published' | 'draft' | 'deleted';
+  coverUrl: string;
+  videoUrl: string;
+  likesIDCount?: number[];
+  nextId?: number;
 }
 
-export const channels : Channels[] = [
+export const channels: Channels[] = [
   {
     id: 1,
     name: 'Код на прокачку',
@@ -26,11 +27,13 @@ export const channels : Channels[] = [
     adPrice: 7500,
     repostsCount: 142,
     commentsCount: 56,
-    description: 'Короткие разборы кода, новости из мира IT и полезные трюки для разработчиков каждый день.',
+    description:
+      'Короткие разборы кода, новости из мира IT и полезные трюки для каждого кодера на каждый день. Практические советы, которые помогут быстрее писать чистый и эффективный код.',
     status: 'published',
     coverUrl: 'http://localhost:9000/posttrace/cover1.jpg',
     videoUrl: 'http://localhost:9000/posttrace/video1.mp4',
-    nextId: 2
+    likesIDCount: [1, 2, 3],
+    nextId: 2,
   },
   {
     id: 2,
@@ -42,11 +45,13 @@ export const channels : Channels[] = [
     adPrice: 15000,
     repostsCount: 892,
     commentsCount: 324,
-    description: 'Самые важные новости за день, кратко и по делу без воды.',
+    description:
+      'Самые важные новости за день, кратко и по делу без воды. Следим за главными событиями в стране и мире, чтобы вы всегда были в курсе последних изменений.',
     status: 'published',
     coverUrl: 'http://localhost:9000/posttrace/cover2.jpg',
     videoUrl: 'http://localhost:9000/posttrace/video2.mp4',
-    nextId: 3
+    likesIDCount: [5, 3],
+    nextId: 3,
   },
   {
     id: 3,
@@ -58,11 +63,13 @@ export const channels : Channels[] = [
     adPrice: 3200,
     repostsCount: 412,
     commentsCount: 128,
-    description: 'Свежие мемы каждый час, поднимаем настроение после пар.',
+    description:
+      'Свежие мемы каждый час, поднимаем настроение после пар. Очень забавные картинки, жизненные ситуации и юмор, который точно заставит улыбнуться.',
     status: 'published',
     coverUrl: 'http://localhost:9000/posttrace/cover3.jpg',
     videoUrl: 'http://localhost:9000/posttrace/video3.mp4',
-    nextId: 4
+    likesIDCount: [],
+    nextId: 4,
   },
   {
     id: 4,
@@ -74,11 +81,12 @@ export const channels : Channels[] = [
     adPrice: 4800,
     repostsCount: 78,
     commentsCount: 34,
-    description: 'Реальные кейсы малого бизнеса, разборы маркетинговых фишек и рабочие схемы заработка.',
+    description:
+      'Реальные кейсы малого бизнеса, разборы маркетинговых фишек и рабочие схемы заработка. Делимся полезным опытом предпринимателей и проверенными инструментами для роста.',
     status: 'published',
     coverUrl: 'http://localhost:9000/posttrace/cover4.jpg',
     videoUrl: 'http://localhost:9000/posttrace/video4.mp4',
-    nextId: 5
+    nextId: 5,
   },
   {
     id: 5,
@@ -90,13 +98,14 @@ export const channels : Channels[] = [
     adPrice: 2100,
     repostsCount: 54,
     commentsCount: 19,
-    description: 'Бюджетные путешествия из России, проверенные маршруты и лайфхаки в поездках.',
+    description:
+      'Бюджетные путешествия из России, проверенные маршруты и лайфхаки в поездках. Показываем, как интересно отдыхать, экономить деньги и открывать новые места.',
     status: 'published',
     coverUrl: 'http://localhost:9000/posttrace/cover5.jpg',
     videoUrl: 'http://localhost:9000/posttrace/video5.mp4',
-    nextId: 1 // Замыкаем круг, после последнего открывается первый канал
+    likesIDCount: [5, 7, 1, 2, 3],
+    nextId: 1,
   },
-  // 1 черновик, отображается только на странице добавления
   {
     id: 6,
     name: 'Лекции МГТУ',
@@ -107,9 +116,10 @@ export const channels : Channels[] = [
     adPrice: 0,
     repostsCount: 0,
     commentsCount: 0,
-    description: 'Конспекты лекций и разборы лабораторных работ для студентов Бауманки.',
+    description:
+      'Конспекты лекций и разборы лабораторных работ для студентов МГТУ им. Н. Э. Баумана. Полезные материалы помогут лучше подготовиться к занятиям, экзаменам и практическим работам.',
     status: 'draft',
     coverUrl: 'http://localhost:9000/posttrace/cover6.jpg',
     videoUrl: 'http://localhost:9000/posttrace/video6.mp4',
-  }
+  },
 ];

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Каталог</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .channels-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      padding: 0 10px 80px 10px;
+    }
+
+    .channel-card-wrapper {
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .channel-card {
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .feed-video {
+      width: 100%;
+      aspect-ratio: 9 / 16;
+      object-fit: cover;
+      display: block;
+      background-color: #000;
+    }
+
+    .card-info {
+      padding: 8px 10px;
+    }
+
+    .card-name {
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 4px;
+    }
+
+    .card-stats {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #666;
+    }
+
+    .delete-form {
+      padding: 0 8px 10px 8px;
+      margin-top: auto;
+    }
+
+    .delete-btn {
+      width: 100%;
+      background-color: #2b78e4; 
+      color: #ffffff;
+      border: none;
+      border-radius: 20px; 
+      padding: 8px 0;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .delete-btn:hover {
+      background-color: #1a62c6;
+    }
+
+    .delete-btn:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <div class="catalog-page">
+      <h1 class="page-title">Каталог каналов</h1>
+
+      <form method="GET" action="/catalogchannels" class="filter-form">
+        <div class="slider-container">
+          <input 
+            type="range" 
+            name="minSubscribers" 
+            id="subscribers"
+            min="0" 
+            max="130000" 
+            step="1000"
+            value="{{currentFilter}}"
+          >
+          <label for="subscribers" class="slider-value">
+            {{currentFilter}}
+          </label>
+        </div>
+        <button type="submit">Показать</button>
+      </form>
+
+      <div class="channels-grid">
+        {{#each catalogChannels}}
+          <div class="channel-card-wrapper">
+            
+            <a href="/feedchannels/{{this.id}}" class="channel-card">
+              <video 
+                class="feed-video" 
+                src="{{#if this.videoUrl}}{{this.videoUrl}}{{else}}/assets/default_video.mp4{{/if}}" 
+                autoplay 
+                muted 
+                loop 
+                playsinline
+              ></video>
+              
+              <div class="card-info">
+                <div class="card-name">{{this.name}}</div>
+                <div class="card-stats">
+                  <span>🔁 {{this.repostsCount}}</span>
+                  <span>👥 {{this.subscribersCount}}</span>
+                </div>
+              </div>
+            </a>
+            
+            <form method="POST" action="/deletechannel" class="delete-form">
+              <input type="hidden" name="id" value="{{this.id}}">
+              <button type="submit" class="delete-btn">Удалить</button>
+            </form>
+
+          </div>
+        {{else}}
+          <p style="grid-column: 1 / -1; text-align: center; color: #4E5969; padding: 40px 0;">
+            По вашему фильтру ничего не найдено 🤷
+          </p>
+        {{/each}}
+      </div>
+    </div>
+
+    {{> channels_navbar}}
+  </div>
+</body>
+</html>
