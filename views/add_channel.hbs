@@ -10,100 +10,34 @@
   <div class="app-container">
     <div class="add-page">
 
+      <h1 class="page-title">{{#if draftChannel}}Публикация канала{{else}}Новый канал{{/if}}</h1>
 
-<!-- Блок 2 Страница если черновик СОЗДАН-->
+      <!-- Блок 2: Страница если черновик СОЗДАН (после "Далее") -->
       {{#if draftChannel}}
-        <form method="POST" action="/publish" class="channel-form">
-          
-          <input type="hidden" name="id" value="{{draftChannel.id}}">
+        <form method="POST" action="/channels/publish" class="channel-form">
 
-          <!-- 1. Блок Видео-превью-->
           <div class="form-group">
             <label class="form-label">Вертикальное видео-превью 9:16</label>
-              <div class="file-upload-area">
-              <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-              </svg>
-            <span>Ссылка на видео</span>
+            <video
+              src="{{#if draftChannel.videoUrl}}{{draftChannel.videoUrl}}{{else}}/assets/default_video.mp4{{/if}}"
+              controls
+              style="width: 100%; max-height: 240px; border-radius: 12px; margin-top: 6px;"
+            ></video>
           </div>
 
-          <input 
-            type="text" 
-            name="videoUrl" 
-            class="form-input" 
-            placeholder="http://localhost:9000/posttrace/video1.mp4"
-            value="{{draftChannel.videoUrl}}">
+          <div class="form-group">
+            <label class="form-label">Обложка канала</label>
+            <img
+              class="video-preview"
+              src="{{#if draftChannel.coverUrl}}{{draftChannel.coverUrl}}{{else}}/assets/default_cover.jpg{{/if}}"
+              alt="Превью обложки"
+              style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px; margin-top: 6px;"
+            >
+          </div>
 
-  <video 
-    src="{{#if draftChannel.videoUrl}}{{draftChannel.videoUrl}}{{else}}/assets/default_video.mp4{{/if}}" 
-    controls 
-    style="width: 100%; max-height: 300px; border-radius: 12px; margin-top: 10px;"
-  ></video>
-</div>
-
-<!-- 2. Блок Обложки (с картинкой по умолчанию) -->
-<div class="form-group">
-  <label class="form-label">Обложка канала</label>
-  <div class="file-upload-area">
-    <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24">
-      <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-    </svg>
-    <span>Ссылка на обложку</span>
-  </div>
-  <input 
-    type="text" 
-    name="coverUrl" 
-    class="form-input"
-    placeholder="http://localhost:9000/posttrace/cover1.jpg"
-    value="{{draftChannel.coverUrl}}"
-  >
-
-  <img 
-    class="video-preview"
-    src="{{#if draftChannel.coverUrl}}{{draftChannel.coverUrl}}{{else}}/assets/default_cover.jpg{{/if}}"
-    alt="Превью обложки"
-    style="width: 100%; max-height: 300px; object-fit: cover; border-radius: 12px; margin-top: 10px;"
-  >
-</div>
-
-<!-- Конец страницы если черновик СОЗДАН-->
-
-
-
-<!--Блок 2.1 Странца черновика -> публикация кнопка опубликовать-->
           <div class="form-group">
             <label class="form-label">Название канала *</label>
-            <input 
-              type="text" 
-              name="name" 
-              class="form-input" 
-              value="{{draftChannel.name}}" 
-              required
-            >
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Юзернейм канала (@username) *</label>
-            <input 
-              type="text" 
-              name="username" 
-              class="form-input" 
-              placeholder="codeboost" 
-              value="{{draftChannel.username}}"
-              required
-            >
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Тематика канала *</label>
-            <input 
-              type="text" 
-              name="topic" 
-              class="form-input" 
-              placeholder="Технологии, Бизнес..." 
-              value="{{draftChannel.topic}}"
-              required
-            >
+            <input type="text" name="name" class="form-input" value="{{draftChannel.name}}" required>
           </div>
 
           <div class="form-group">
@@ -117,61 +51,38 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Цена рекламы (₽)</label>
-            <input type="number" name="adPrice" class="form-input" value="{{draftChannel.adPrice}}">
-          </div>
-
-          <div class="form-group">
             <label class="form-label">Короткое описание</label>
             <textarea name="description" class="form-input" rows="3">{{draftChannel.description}}</textarea>
           </div>
 
-          <div class="form-actions" style="margin-top: 24px; margin-bottom: 30px;">
-            <button type="submit" class="submit-btn publish-btn">
-              Опубликовать
-            </button>
+          <div class="form-actions" style="margin-bottom: 40px;">
+            <button type="submit" class="submit-btn publish-btn">Опубликовать</button>
           </div>
 
         </form>
 
-<!---Блок 2 Конец странцы черновика -> публикация кнопка опубликовать-->
-
-
-
-
-<!--Блок 1 Страница если черновик НЕ СОЗДАН-->
+      <!-- Блок 1: До нажатия "Далее" (Сверху видео и фото из проводника друг под другом) -->
       {{else}}
-        <form method="POST" action="/addchannel" class="channel-form">
+        <form method="POST" action="/channels/add" class="channel-form">
 
+          <!-- 1. Видео из проводника -->
           <div class="form-group">
-            <label class="form-label">Вертикальное видео-превью 9:16</label>
-            <div class="file-upload-area">
-              <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-              <span>Вставьте ссылку на видео </span>
-            </div>
-            <input 
-              type="text" 
-              name="videoUrl" 
-              class="form-input" 
-              placeholder="http://localhost:9000/video1.mp4"
-            >
+            <label class="form-label">Видео-превью (9:16)</label>
+            <input type="file" accept="video/*" class="form-file-input">
+            <!-- Отправляем серверу заглушку из папки public/assets -->
+            <input type="hidden" name="videoUrl" value="/assets/default_video.mp4">
           </div>
 
+          <!-- 2. Фото из проводника (друг под другом) -->
           <div class="form-group">
-            <label class="form-label">Обложка канала</label>
-            <div class="file-upload-area">
-              <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-              <span>Вставьте ссылку на обложку</span>
-            </div>
-            <input 
-              type="text" 
-              name="coverUrl" 
-              class="form-input" 
-              placeholder="http://localhost:9000/cover1.jpg"
-            >
+            <label class="form-label">Фото / Обложка канала</label>
+            <input type="file" accept="image/*" class="form-file-input">
+            <!-- Отправляем серверу заглушку из папки public/assets -->
+            <input type="hidden" name="coverUrl" value="/assets/default_cover.jpg">
           </div>
 
-          <div class="form-group">
+          <!-- 3. Только поле ввода названия -->
+          <div class="form-group" style="margin-top: 20px;">
             <label class="form-label">Название канала *</label>
             <input 
               type="text" 
@@ -182,18 +93,14 @@
             >
           </div>
 
-          <div class="form-actions" style="margin-top: 24px; margin-bottom: 30px;">
-            <button type="submit" class="submit-btn">
-              Далее
-            </button>
+          <div class="form-actions" style="margin-top: 24px; margin-bottom: 40px;">
+            <button type="submit" class="submit-btn">Далее</button>
           </div>
 
         </form>
       {{/if}}
 
     </div>
-<!---Блок 1  Кнец страницы если черновик НЕ СОЗДАН-->
-
 
     {{> channels_navbar}}
   </div>

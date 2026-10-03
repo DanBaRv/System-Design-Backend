@@ -1,4 +1,4 @@
-import {Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, OneToMany, ManyToOne, JoinColumn} from 'typeorm'
+import {Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToOne, JoinColumn} from 'typeorm'
 import { Like } from './likeChannel.entity';
 import { User } from './userChannel.entity';
 
@@ -16,26 +16,11 @@ export class Channel{
     @Column({length : 50})
     name: string;
 
-    @Column({type: 'varchar',length : 50, nullable: true })
-    username: string | null ;
+    @Column({ type: 'int', nullable: true })
+    subscribersCount: number | null;
 
-    @Column({type: 'varchar', length : 100, nullable: true })
-    topic: string | null ;
-
-    @Column({ type: 'int', default: 0 })
-    subscribersCount: number;
-
-    @Column({ type: 'int', default: 0 })
-    averageReach: number;
-
-    @Column({ type: 'int', default: 0 })
-    adPrice: number;
-
-    @Column({ type: 'int', default: 0 })
-    repostsCount: number;
-
-    @Column({ type: 'int', default: 0 })
-    commentsCount: number;
+    @Column({ type: 'int',nullable: true })
+    averageReach: number | null;
 
     @Column({ type: 'varchar', length: 300, nullable: true  })
     description: string | null;
@@ -47,11 +32,11 @@ export class Channel{
     })
     status: ChannelStatus;
 
-    @Column({ type: 'varchar',length: 250, nullable: true })
-    coverUrl: string| null;
+    @Column({ type: 'varchar',length: 250})
+    coverUrl: string;
 
-    @Column({ type: 'varchar',length: 250, nullable: true })
-    videoUrl: string| null;
+    @Column({ type: 'varchar',length: 250})
+    videoUrl: string;
 
     @Column({ type: 'int', nullable: true })
     nextId: number | null;
@@ -59,13 +44,13 @@ export class Channel{
     @Column({ type: 'timestamp' })
     channelCreated: Date;
 
-    @Column({ type: 'timestamp', nullable: true })
-    channelFormed: Date | null;
-
     @Column()
     creatorId: number;
 
-    
+    @Column({ type: 'timestamp', nullable: true })
+    channelFormed: Date | null;
+
+
     @OneToMany(() => Like, (like) => like.channels)
     likes:Like[]
 

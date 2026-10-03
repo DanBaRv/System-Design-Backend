@@ -62,21 +62,23 @@
       margin-top: auto;
     }
 
-    .delete-btn {
+.delete-btn {
       width: 100%;
-      background-color: #2b78e4; 
-      color: #ffffff;
-      border: none;
-      border-radius: 20px; 
-      padding: 8px 0;
+      background-color: #F7F8FA; 
+      color: #4E5969;
+      border: 1px solid #E5E6EB;
+      border-radius: 12px; 
+      padding: 9px 0;
       font-size: 13px;
       font-weight: 500;
       cursor: pointer;
-      transition: background-color 0.2s;
+      transition: all 0.2s ease;
     }
 
     .delete-btn:hover {
-      background-color: #1a62c6;
+      background-color: #FFF2F0;
+      color: #F53F3F;
+      border-color: #FFCCC7;
     }
 
     .delete-btn:active {
@@ -89,21 +91,42 @@
     <div class="catalog-page">
       <h1 class="page-title">Каталог каналов</h1>
 
-      <form method="GET" action="/catalogchannels" class="filter-form">
-        <div class="slider-container">
+      <form method="GET" action="/channels/catalog" class="filter-form">
+        <div class="slider-box">
+          <div class="slider-header">
+            <span class="slider-title">От подписчиков:</span>
+            <span class="slider-current-val">{{#if currentFilter}}{{currentFilter}}{{else}}0{{/if}}</span>
+          </div>
+
           <input 
             type="range" 
             name="minSubscribers" 
             id="subscribers"
             min="0" 
-            max="130000" 
-            step="1000"
-            value="{{currentFilter}}"
+            max="120000" 
+            step="10000"
+            list="subscribers-markers"
+            value="{{#if currentFilter}}{{currentFilter}}{{else}}0{{/if}}"
           >
-          <label for="subscribers" class="slider-value">
-            {{currentFilter}}
-          </label>
+
+          <datalist id="subscribers-markers">
+            <option value="0"></option>
+            <option value="30000"></option>
+            <option value="60000"></option>
+            <option value="90000"></option>
+            <option value="120000"></option>
+          </datalist>
+
+       
+          <div class="slider-ticks">
+            <span>0</span>
+            <span>30k</span>
+            <span>60k</span>
+            <span>90k</span>
+            <span>120k</span>
+          </div>
         </div>
+
         <button type="submit">Показать</button>
       </form>
 
@@ -111,7 +134,7 @@
         {{#each catalogChannels}}
           <div class="channel-card-wrapper">
             
-            <a href="/feedchannels/{{this.id}}" class="channel-card">
+            <a href="/channels/feed/{{this.id}}" class="channel-card">
               <video 
                 class="feed-video" 
                 src="{{#if this.videoUrl}}{{this.videoUrl}}{{else}}/assets/default_video.mp4{{/if}}" 
@@ -130,7 +153,7 @@
               </div>
             </a>
             
-            <form method="POST" action="/deletechannel" class="delete-form">
+            <form method="POST" action="/channels/delete" class="delete-form">
               <input type="hidden" name="id" value="{{this.id}}">
               <button type="submit" class="delete-btn">Удалить</button>
             </form>

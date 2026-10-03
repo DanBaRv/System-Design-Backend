@@ -13,6 +13,9 @@ export class User{
     @Column({length:50})
     email:string;
 
+    @Column({length:100})
+    password:string;
+
     @OneToMany(() => Like, (like) => like.user)
     likes:Like[]
 

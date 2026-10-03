@@ -55,9 +55,6 @@ export class ChannelsService {
     }
 
     async getCatalogOfChannels(minSubscribers?: number): Promise < Channel[ ]>{
-        /*const where: any = {
-            status : ChannelStatus.DELETED
-        }*/
        const where: any = {
             status : ChannelStatus.PUBLISHED
         }
@@ -83,22 +80,20 @@ export class ChannelsService {
 
         const draftChannel = await this.channelsRepository.save({
             name,
-            coverUrl: coverUrl ?? null,
-            videoUrl: videoUrl ?? null,
+            coverUrl: coverUrl,
+            videoUrl: videoUrl,
             status: ChannelStatus.DRAFT,
             creatorId,
             channelCreated: new Date(),
-            subscribersCount: 0,
-            averageReach: 0,
-            adPrice: 0, repostsCount: 0, commentsCount: 0,
+            subscribersCount: null,
+            averageReach: null,
         })
 
         return draftChannel
     }
 
     async changePubl(creatorId:number, name: string,subscribersCount:number, 
-        username ?: string, topic ?:string,
-        adPrice ?:number, description ?: string, coverUrl?:string,videoUrl?:string): Promise <Channel>{
+        averageReach: number, description?: string): Promise <Channel>{
         const findDraft = await this.channelsRepository.findOneBy({
             creatorId,
             status:ChannelStatus.DRAFT
@@ -114,27 +109,12 @@ export class ChannelsService {
             channelFormed: new Date(),
             name,
             subscribersCount,
-            username,
-            topic,
-            adPrice,
+            averageReach,
             description,
-            coverUrl,
-            videoUrl,
         })
 
         return changePublStatus
     }
-
-    /*async deleteChannel(id:number){
-        const findChannel = await this.channelsRepository.findOneBy({id})
-                if (!findChannel) {
-            throw new NotFoundException("error");
-        }
-        const deletedChannel = await this.channelsRepository.save({
-            id: findChannel.id,
-            status : ChannelStatus.DELETED,
-        }) 
-    }*/
 
         async deleteChannel(id:number):Promise <void>{
             await this.dataSource.query(
