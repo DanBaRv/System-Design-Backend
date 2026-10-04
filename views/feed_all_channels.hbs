@@ -12,9 +12,7 @@
 
       <video class="feed-video" src="{{channel.videoUrl}}" autoplay muted loop playsinline></video>
       
-      <!-- Справа ровно 2 иконки в одну колонку -->
       <div class="feed-side-actions">
-        <!-- 1. Лайк -->
         <button class="action-img" type="button">
           <svg class="action-icon" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
@@ -22,7 +20,6 @@
           <span>{{likes}}</span>
         </button>
 
-        <!-- 2. Следующий канал иконкой -->
         <a href="/channels/feed/{{channel.id}}?next=true" class="action-img action-next" title="Следующий канал">
           <svg class="action-icon" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="10"></circle>
@@ -33,9 +30,7 @@
         </a>
       </div>
 
-      <!-- Нижний оверлей: 2 параметра и описание (на одном уровне с иконками) -->
       <div class="feed-overlay">
-        <!-- ОБА параметра аккуратно и красиво -->
         <div class="channel-stats">
           <div class="stat-badge">
             <span class="stat-icon">👥</span>
@@ -47,7 +42,6 @@
           </div>
         </div>
 
-        <!-- Описание -->
         <div class="feed-description">
           <span class="desc-text">{{channel.description}}</span>
           <a href="/channels/feed/{{channel.id}}?next=false" class="more-link">ещё</a>

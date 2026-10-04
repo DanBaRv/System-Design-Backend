@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException  } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { Channel, ChannelStatus  } from './serviceChannel.entity'
@@ -6,6 +6,7 @@ import { Like } from './likeChannel.entity'
 import { Not } from 'typeorm'
 import { MoreThanOrEqual } from 'typeorm';
 import { DataSource } from 'typeorm'
+import { CurrentUser } from './current-user'
 
 @Injectable()
 export class ChannelsService {
@@ -61,7 +62,14 @@ export class ChannelsService {
         if (minSubscribers !== undefined) {
             where.subscribersCount = MoreThanOrEqual(minSubscribers)
         }
-        return this.channelsRepository.find({where})
+        const channels = await this.channelsRepository.find({where})
+
+        const currentUserId  =  CurrentUser.getInstance().id
+
+        return channels.map(channel => ({
+            ...channel,
+            isMine: channel.creatorId === currentUserId? 1:0
+        }))
     }
 
     async getLikesForChannel(id: number): Promise <number>{
@@ -116,11 +124,63 @@ export class ChannelsService {
         return changePublStatus
     }
 
-        async deleteChannel(id:number):Promise <void>{
-            await this.dataSource.query(
-                'UPDATE channel SET status = $1 WHERE id = $2',
-                ['deleted',id]
-            )
+    async deleteChannel(id:number):Promise <void>{
+        const channel = await this.channelsRepository.findOneBy({id})//нашли канал=> нашли кто его создал
+        
+        if (!channel) //есть ли вообще кнала
+        {
+            throw new NotFoundException('Канал не найден')
         }
 
+        if (channel.creatorId !== CurrentUser.getInstance().id) {//проверка кто его удаляет те только хозяин
+            throw new ForbiddenException('Можно удалять только свои услуги')
+        }
+
+        await this.dataSource.query(
+            'UPDATE channel SET status = $1 WHERE id = $2',
+            ['deleted',id]
+        )
+    }
+
+    async setLikes(id:number,value:number) : Promise <number> {
+        //+берем id
+        //+ищем пост
+        //+смотрим количество лайков
+        //смотри что в Body
+        //извлекаем value
+
+        //+если 1 то есть истина то проверяем был ли 
+        //+поставлен лайк 
+        // уже если да то ничего не делаем 
+        //если не было лайка ставим лайк +1
+
+        const where : any = {
+            channelId : id
+        }
+        const findedChannel = await this.likesRepository.find({where})
+        const lenLikeChannel = findedChannel.length
+
+        const existing = await this.likesRepository.findOneBy({//по факту это позиция лайка то есть кто поставил и под каким каналом
+            userId:CurrentUser.getInstance().id ,
+            channelId : id
+
+        })
+
+        if (value === 1)
+        {
+            if (!existing){//если лайк уже стоит удаляем лайк -1
+                await this.likesRepository.save(
+                    {
+                        userId:CurrentUser.getInstance().id ,
+                        channelId : id
+                    }
+                )
+            }
+        }
+        else if(existing){//если 0 ТО удаляем лайк 
+                await this.likesRepository.remove(existing)
+        }
+        
+        return this.getLikesForChannel(id)
+    }
 }
