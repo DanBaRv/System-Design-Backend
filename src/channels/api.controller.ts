@@ -9,12 +9,13 @@ import { UsersService } from './users.service'
 import { FilesService } from './files.service'
 import { CurrentUser } from './current-user'
 import type { Multer } from 'multer'
+import { NotFoundException } from '@nestjs/common';
+
 
 @Controller('api/channels')
 export class ApiController{
     constructor(
         private readonly channelsService: ChannelsService,
-        private readonly usersService: UsersService,
         private readonly filesService: FilesService,
     ) {}
 
@@ -31,9 +32,12 @@ export class ApiController{
     //получение канала по id
     @Get('feed/:id')
     async getFeed(@Param('id') id: string){
-        const channelId = Number(id)
-        const feedChannel = await this.channelsService.getChannel(channelId)
-        return feedChannel
+            const channel = await this.channelsService.getChannel(Number(id))
+    if (!channel) {
+        throw new NotFoundException('Канал не найден')
+    }
+    const likes = await this.channelsService.getLikesForChannel(Number(id))
+    return { channel, likes }   
     }
 
     //выести каталог каналов с мин количеством подписчиков(может быть 0, выведем всех)
@@ -145,24 +149,5 @@ export class ApiController{
         const idChannel = Number(id)
         const likes = await this.channelsService.setLikes(idChannel,body.value)
         return { likes } 
-    }
-
-    //регистрация
-    @Post('registration')
-    async registrationUser(@Body() body: {name:string, email:string, password:string}){
-        await this.usersService.registrationUser(body.name,body.email,body.password)
-        return { message: 'Пользователь зарегистрирован' }
-    }
-
-    //аутентификация
-    @Post('auth')
-    async authUser(@Body() body: {email:string,password:string}){
-        return await this.usersService.authUser(body.email,body.password)
-    }
-
-    //деаутентификация
-    @Post('logout')
-    async logout() {
-        return { message: 'Деавторизация будет реализована в ЛР4' }
     }
 }

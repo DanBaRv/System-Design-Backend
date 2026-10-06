@@ -24,9 +24,7 @@ export class ChannelsService {
             id,
             status : ChannelStatus.PUBLISHED
         })
-        if (!channel) {
-            throw new NotFoundException("error in the next channel id");
-        }
+
         return channel;
     }
 

@@ -1,114 +1,164 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# ChannelsStat — Лабораторная работа №3
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+**Тема:** История пересылки поста в каналах (ChannelStat)
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+**Цель работы:** создание веб-сервиса в бэкенде системы для использования его в SPA. REST API со всей итоговой бизнес-логикой (кроме авторизации), подключённое к PostgreSQL, с загрузкой медиафайлов в MinIO.
 
-## Description
+**Стек:** NestJS, TypeORM, PostgreSQL, MinIO, Handlebars (SSR-страницы ЛР1–ЛР2), Docker Compose.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+---
 
-## Project setup
+## Запуск проекта
 
 ```bash
-$ npm install
+# 1. Поднять инфраструктуру (PostgreSQL + MinIO + Adminer)
+docker compose up -d
+
+# 2. Установить зависимости
+npm install
+
+# 3. Применить миграции (создание таблиц)
+npx typeorm migration:run -d src/data-source.ts
+
+# 4. Запустить сервер
+npm run start:dev
 ```
 
-## Compile and run the project
+**Сервисы после запуска:**
 
-```bash
-# development
-$ npm run start
+| Сервис                      | Адрес                 | Доступы                                 |
+| --------------------------- | --------------------- | --------------------------------------- |
+| NestJS (API + SSR-страницы) | http://localhost:3000 | —                                       |
+| Adminer (панель БД)         | http://localhost:8080 | posttrace / posttrace, сервер: postgres |
+| MinIO (файлы)               | http://localhost:9000 | бакет: posttrace (публичное чтение)     |
+| MinIO-консоль (заливка)     | http://localhost:9001 | root / rootpassword                     |
 
-# watch mode
-$ npm run start:dev
+> Текущий пользователь зафиксирован Singleton-классом (`src/channels/current-user.ts`),
+> что соответствует требованию ЛР3 («пользователь-создатель зафиксирован константой»).
+> В ЛР4 Singleton будет заменён данными из авторизации.
 
-# production mode
-$ npm run start:prod
+---
+
+## HTTP-методы API
+
+Все методы имеют префикс `/api`. Формат запросов/ответов — JSON (кроме загрузки файлов — multipart/form-data).
+
+### Домен услуг — `/api/channels`
+
+| №   | Метод  | URL                      | Тело запроса                                                | Ответ                            | Описание                                                                                                                                               |
+| --- | ------ | ------------------------ | ----------------------------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | GET    | `/api/channels`          | query: `?minSubscribers=<число>` (необяз.)                  | `[{ ...Channel, isMine: 0\|1 }]` | Список опубликованных услуг с фильтрацией по количеству подписчиков. Признак `isMine` = 1, если создатель совпадает с текущим пользователем            |
+| 2   | GET    | `/api/channels/feed/:id` | —                                                           | `Channel`                        | Одна услуга (лента). Только опубликованные                                                                                                             |
+| 3   | GET    | `/api/channels/draft`    | —                                                           | `Channel` \| пусто               | Черновик текущего пользователя (не более одного, ID не указывается)                                                                                    |
+| 4   | POST   | `/api/channels/add`      | multipart/form-data: `name`, `cover` (файл), `video` (файл) | `Channel` (созданный черновик)   | Добавление услуги. Файлы сохраняются в MinIO, названия генерируются на латинице и записываются в БД                                                    |
+| 5   | PUT    | `/api/channels/publish`  | `{ name, subscribersCount, averageReach, description? }`    | `Channel` (опубликованный)       | Публикация: смена статуса draft → published, проставляется дата формирования. Вернуть в черновик нельзя                                                |
+| 6   | DELETE | `/api/channels/:id`      | —                                                           | `{ success: true }`              | Логическое удаление (soft delete): статус → deleted, строка остаётся в БД. Только услуги текущего пользователя (иначе 403). Без ORM — сырой SQL UPDATE |
+| 7   | POST   | `/api/channels/:id/like` | `{ value: 0\|1 }`                                           | `{ likes: <число> }`             | Лайк от текущего пользователя: 1 — поставить, 0 — отменить. Возвращает актуальное количество лайков                                                    |
+
+### Домен пользователя — `/api/users`
+
+| №   | Метод | URL                   | Тело запроса                | Ответ         | Описание                                                                  |
+| --- | ----- | --------------------- | --------------------------- | ------------- | ------------------------------------------------------------------------- |
+| 8   | POST  | `/api/users/register` | `{ name, email, password }` | `{ message }` | Регистрация нового пользователя. Email уникален (иначе 409)               |
+| 9   | POST  | `/api/users/login`    | `{ email, password }`       | `{ message }` | Аутентификация. Проверка учётных данных по БД (заглушка для ЛР4 — токены) |
+| 10  | POST  | `/api/users/logout`   | —                           | `{ message }` | Деавторизация (заглушка для ЛР4 — JWT и чёрный список токенов)            |
+
+### SSR-страницы (ЛР1–ЛР2, остались без изменений)
+
+| Метод | URL | Описание |
+|---|---|---|
+| GET | `/` | Редирект на ленту первого канала |
+| GET | `/channels/feed/:id` | Лента каналов (`?next=true` — следующий по кольцу) |
+| GET | `/channels/catalog` | Каталог с фильтром `?minSubscribers=` |
+| GET | `/channels/add` | Страница добавления (два состояния: форма «Далее» / форма «Опубликовать») |
+
+---
+
+## Коды ответов
+
+| Код | Когда |
+|---|---|
+| 200 / 201 | Успех (GET / создание) |
+| 400 | Некорректный запрос (нет обязательных файлов, неверное поле) |
+| 401 | Неверный email или пароль (login) |
+| 403 | Попытка удалить чужую услугу |
+| 404 | Услуга не найдена / удалена |
+| 409 | Email уже занят (register) |
+
+---
+
+## Структура проекта
+
+```
+src/
+  main.ts                      # запуск, hbs, статика
+  app.module.ts                # TypeORM-подключение
+  data-source.ts               # конфиг миграций
+  channels/
+    channels.module.ts         # модуль домена
+    pages.controller.ts        # SSR-страницы
+    api.controller.ts          # API: домен /api/channels
+    users.controller.ts        # API: домен /api/users
+    channels.service.ts        # бизнес-логика услуг
+    users.service.ts           # регистрация / аутентификация
+    files.service.ts           # загрузка файлов в MinIO (генерация имён)
+    current-user.ts            # Singleton: текущий пользователь
+    serviceChannel.entity.ts   # модель Channel
+    userChannel.entity.ts      # модель User
+    likeChannel.entity.ts      # модель Like (м-м пользователь-услуги)
+    channels.data.ts           # (ЛР1) — заменён БД
+  migrations/                  # миграции TypeORM
+views/                         # hbs-шаблоны страниц
+public/                        # css, дефолтные медиа
 ```
 
-## Run tests
+---
 
-```bash
-# unit tests
-$ npm run test
+## Таблицы базы данных
 
-# e2e tests
-$ npm run test:e2e
+### `channel` — услуги (каналы)
 
-# test coverage
-$ npm run test:cov
-```
+| Поле | Тип | NULL | Описание |
+|---|---|---|---|
+| id | SERIAL | PK | первичный ключ |
+| name | VARCHAR(50) | — | наименование |
+| subscribersCount | INTEGER | ✓ | поле по теме: количество подписчиков |
+| averageReach | INTEGER | ✓ | поле по теме: средний охват одного поста |
+| description | VARCHAR(300) | ✓ | краткое описание |
+| status | ENUM(draft, published, deleted) | — | статус услуги |
+| coverUrl | VARCHAR(250) | — | имя файла обложки в MinIO |
+| videoUrl | VARCHAR(250) | — | имя файла видео в MinIO |
+| nextId | INTEGER | ✓ | навигация кольца ленты |
+| channelCreated | TIMESTAMP | — | дата создания |
+| channelFormed | TIMESTAMP | ✓ | дата формирования (при публикации) |
+| creatorId | INTEGER | FK → users | создатель |
 
-## Deployment
+### `users` — пользователи
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+| Поле | Тип | NULL | Описание |
+|---|---|---|---|
+| userId | SERIAL | PK | первичный ключ |
+| name | VARCHAR(50) | — | имя |
+| email | VARCHAR(50) | — | email (уникален) |
+| password | VARCHAR(100) | — | пароль (в ЛР4 — хеширование) |
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### `likes` — лайки (м-м пользователь–услуги)
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+| Поле | Тип | Описание |
+|---|---|---|
+| id | SERIAL, PK | первичный ключ записи |
+| userId | INTEGER, FK → users | кто поставил лайк |
+| channelId | INTEGER, FK → channel | какой услуге |
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+*Каскадное удаление не используется
 
-## Observability
+---
 
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
+## Бизнес-правила
 
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
-
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observer](https://observer.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- Услуги в статусе `deleted` не передаются клиенту (фильтруются на бэкенде)
+- У пользователя не более одной услуги в статусе `draft` (проверка при создании)
+- Сменить статус обратно на `draft` нельзя (publish работает только с черновиком)
+- Удалять можно только свои услуги (проверка creatorId, иначе 403)
+- Количество лайков вычисляется динамически: COUNT строк в таблице likes
+- Системные поля (id, статус, создатель, даты) не принимаются от клиента — вычисляются на бэкенде
