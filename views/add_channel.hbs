@@ -12,92 +12,83 @@
 
       <h1 class="page-title">{{#if draftChannel}}Публикация канала{{else}}Новый канал{{/if}}</h1>
 
-      <!-- Блок 2: Страница если черновик СОЗДАН (после "Далее") -->
+      <!-- ═══ Черновик СОЗДАН: превью (выбор был до «Далее») + поля публикации ═══ -->
       {{#if draftChannel}}
-        <form method="POST" action="/channels/publish" class="channel-form">
 
-          <div class="form-group">
-            <label class="form-label">Вертикальное видео-превью 9:16</label>
-            <video
-              src="{{#if draftChannel.videoUrl}}{{draftChannel.videoUrl}}{{else}}/assets/default_video.mp4{{/if}}"
-              controls
-              style="width: 100%; max-height: 240px; border-radius: 12px; margin-top: 6px;"
-            ></video>
-          </div>
+      <form method="POST" action="/channels/publish" class="channel-form">
+        <div class="form-group">
+          <label class="form-label">Фото / Обложка канала</label>
+          <img class="video-preview"
+               src="{{fileUrl draftChannel.coverUrl}}"
+               alt="Обложка">
+        </div>
 
-          <div class="form-group">
-            <label class="form-label">Обложка канала</label>
-            <img
-              class="video-preview"
-              src="{{#if draftChannel.coverUrl}}{{draftChannel.coverUrl}}{{else}}/assets/default_cover.jpg{{/if}}"
-              alt="Превью обложки"
-              style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px; margin-top: 6px;"
-            >
-          </div>
+        <div class="form-group">
+          <label class="form-label">Видео-превью (9:16)</label>
+          <video class="video-preview"
+                 src="{{fileUrl draftChannel.videoUrl}}"
+                 autoplay muted loop playsinline></video>
+        </div>
 
-          <div class="form-group">
-            <label class="form-label">Название канала *</label>
-            <input type="text" name="name" class="form-input" value="{{draftChannel.name}}" required>
-          </div>
+        <div class="form-group">
+          <label class="form-label">Название канала *</label>
+          <input type="text" name="name" class="form-input"
+                 value="{{draftChannel.name}}" required>
+        </div>
 
-          <div class="form-group">
-            <label class="form-label">Количество подписчиков</label>
-            <input type="number" name="subscribersCount" class="form-input" value="{{draftChannel.subscribersCount}}">
-          </div>
+        <div class="form-group">
+          <label class="form-label">Количество подписчиков</label>
+          <input type="number" name="subscribersCount" class="form-input"
+                 value="{{draftChannel.subscribersCount}}">
+        </div>
 
-          <div class="form-group">
-            <label class="form-label">Средний охват одного поста</label>
-            <input type="number" name="averageReach" class="form-input" value="{{draftChannel.averageReach}}">
-          </div>
+        <div class="form-group">
+          <label class="form-label">Средний охват одного поста</label>
+          <input type="number" name="averageReach" class="form-input"
+                 value="{{draftChannel.averageReach}}">
+        </div>
 
-          <div class="form-group">
-            <label class="form-label">Короткое описание</label>
-            <textarea name="description" class="form-input" rows="3">{{draftChannel.description}}</textarea>
-          </div>
+        <div class="form-group">
+          <label class="form-label">Короткое описание</label>
+          <textarea name="description" class="form-input" rows="3">{{draftChannel.description}}</textarea>
+        </div>
 
-          <div class="form-actions" style="margin-bottom: 40px;">
-            <button type="submit" class="submit-btn publish-btn">Опубликовать</button>
-          </div>
+        <div class="form-actions">
+          <button type="submit" class="submit-btn publish-btn">Опубликовать</button>
+        </div>
+      </form>
 
-        </form>
-
-      <!-- Блок 1: До нажатия "Далее" (Сверху видео и фото из проводника друг под другом) -->
       {{else}}
-        <form method="POST" action="/channels/add" class="channel-form">
+      <!-- ═══ Черновика НЕТ: видео и фото сверху, выбор из проводника, дефолты сразу ═══ -->
+      <form method="POST" action="/channels/add" class="channel-form" enctype="multipart/form-data">
 
-          <!-- 1. Видео из проводника -->
-          <div class="form-group">
-            <label class="form-label">Видео-превью (9:16)</label>
-            <input type="file" accept="video/*" class="form-file-input">
-            <!-- Отправляем серверу заглушку из папки public/assets -->
-            <input type="hidden" name="videoUrl" value="/assets/default_video.mp4">
-          </div>
+        <div class="form-group">
+          <label class="form-label">Фото / Обложка канала</label>
+          <img id="coverPreview" class="video-preview"
+               src="/assets/default_cover.jpg" alt="Обложка по умолчанию">
+          <input type="file" name="cover" accept="image/*" class="form-file-input"
+                 onchange="document.getElementById('coverPreview').src = URL.createObjectURL(this.files[0])">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Видео-превью (9:16)</label>
+          <video id="videoPreview" class="video-preview"
+                 src="/assets/default_video.mp4"
+                 autoplay muted loop playsinline></video>
+          <input type="file" name="video" accept="video/*" class="form-file-input"
+                 onchange="document.getElementById('videoPreview').src = URL.createObjectURL(this.files[0])">
+        </div>
 
-          <!-- 2. Фото из проводника (друг под другом) -->
-          <div class="form-group">
-            <label class="form-label">Фото / Обложка канала</label>
-            <input type="file" accept="image/*" class="form-file-input">
-            <!-- Отправляем серверу заглушку из папки public/assets -->
-            <input type="hidden" name="coverUrl" value="/assets/default_cover.jpg">
-          </div>
+        <div class="form-group" style="margin-top: 20px;">
+          <label class="form-label">Название канала *</label>
+          <input type="text" name="name" class="form-input"
+                 placeholder="Например: Код на прокачку" required>
+        </div>
 
-          <!-- 3. Только поле ввода названия -->
-          <div class="form-group" style="margin-top: 20px;">
-            <label class="form-label">Название канала *</label>
-            <input 
-              type="text" 
-              name="name" 
-              class="form-input" 
-              placeholder="Например: Код на прокачку" 
-              required
-            >
-          </div>
-
-          <div class="form-actions" style="margin-top: 24px; margin-bottom: 40px;">
-            <button type="submit" class="submit-btn">Далее</button>
-          </div>
-
-        </form>
+        <div class="form-actions" style="margin-top: 24px; margin-bottom: 40px;">
+          <button type="submit" class="submit-btn">Далее</button>
+        </div>
+      </form>
       {{/if}}
 
     </div>

@@ -167,6 +167,7 @@ body {
     font-size: 13px;
     border: 1px solid rgba(255, 255, 255, 0.15);
     color: rgba(255, 255, 255, 0.9);
+    flex-direction: column;
 }
 
 .stat-badge b {

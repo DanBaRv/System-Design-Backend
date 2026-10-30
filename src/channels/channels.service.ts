@@ -39,6 +39,7 @@ export class ChannelsService {
         if (!channel.nextId) {
             return null; 
         }
+        
         return this.channelsRepository.findOneBy({id: channel.nextId})
     }
 
@@ -106,7 +107,7 @@ export class ChannelsService {
         })
 
         if (!findDraft) {
-            throw new NotFoundException("error");
+            throw new ForbiddenException('Можно изменять только свои услуги')
         }
 
         const changePublStatus = await this.channelsRepository.save({
@@ -181,4 +182,18 @@ export class ChannelsService {
         
         return this.getLikesForChannel(id)
     }
+
+    // Лента: первый опубликованный канал (без указания id)
+async getFirstFeedChannel(): Promise<Channel> {
+    const [first] = await this.channelsRepository.find({
+        where: { status: ChannelStatus.PUBLISHED },
+        order: { id: 'ASC' },
+        take: 1,
+    })
+    if (!first) {
+        throw new NotFoundException('Нет опубликованных каналов')
+    }
+    return first
+}
+
 }

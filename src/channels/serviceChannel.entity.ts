@@ -24,12 +24,15 @@ export class Channel{
 
     @Column({ type: 'varchar', length: 300, nullable: true  })
     description: string | null;
-
+/*
     @Column({
-        type: 'enum',
+        type: 'enum',ФС
         enum: ChannelStatus,
         default: ChannelStatus.DRAFT,
     })
+    status: ChannelStatus;*/
+
+    @Column({ type: 'varchar', length: 20, default: ChannelStatus.DRAFT })
     status: ChannelStatus;
 
     @Column({ type: 'varchar',length: 250})

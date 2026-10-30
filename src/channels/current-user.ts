@@ -1,3 +1,4 @@
+import type { Request } from 'express'
 export class CurrentUser {
   private static instance: CurrentUser 
   private constructor(    
@@ -11,6 +12,9 @@ export class CurrentUser {
       }
       return CurrentUser.instance             
   }
+}
+export function getCurrentUser(req: Request): number | null {
+    return (req.session as any)?.userId ?? null
 }
 
 const user = CurrentUser.getInstance()

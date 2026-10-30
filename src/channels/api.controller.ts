@@ -1,5 +1,5 @@
 import {
-    Controller, Get, Post, Put, Delete,
+    Controller, Get, Post, Put, Delete,UseGuards,
     Param, Query, Body,
     UseInterceptors, UploadedFiles, BadRequestException,
 } from '@nestjs/common'
@@ -10,8 +10,11 @@ import { FilesService } from './files.service'
 import { CurrentUser } from './current-user'
 import type { Multer } from 'multer'
 import { NotFoundException } from '@nestjs/common';
+import { AuthGuard } from './auth.guard'
+import { ApiOperation, ApiOkResponse, ApiBearerAuth,ApiConsumes, ApiBody,ApiTags} from '@nestjs/swagger'
+import { Channel } from './serviceChannel.entity'
 
-
+@ApiTags('Домен услуг')
 @Controller('api/channels')
 export class ApiController{
     constructor(
@@ -23,6 +26,8 @@ export class ApiController{
 
     // GET /api/channels/draft
     //прочитать черновик есть он или его нет
+    @ApiOperation({summary : 'Чтение последнего черновик канала, при его наличии'})
+    @ApiOkResponse({description:'Данные канала'})
     @Get('draft')
     async getDraft(){
         const draftChannel = await this.channelsService.getDraftOfChannel(CurrentUser.getInstance().id)
@@ -30,17 +35,54 @@ export class ApiController{
     }
 
     //получение канала по id
-    @Get('feed/:id')
-    async getFeed(@Param('id') id: string){
-            const channel = await this.channelsService.getChannel(Number(id))
+@ApiOperation({ summary: 'Лента: без id — с начала, с id — конкретный канал'})
+@ApiOkResponse({ description: 'Данные канала + количество лайков + признак isMine' })
+@Get('feed')
+async getFeed(
+    @Query('id') id?: string,
+    @Query('next') next?: string,
+) {
+    let channel: Channel | null
+
+    if (id === undefined) {
+        channel = await this.channelsService.getFirstFeedChannel()
+    } else {
+        // «Лента по ид» (+ ?next=true — следующий по кольцу)
+        const idChannel = Number(id)
+        if (Number.isNaN(idChannel)) {
+            throw new NotFoundException('Некорректный id канала')
+        }
+
+        channel = next === 'true'
+            ? await this.channelsService.getNextChannel(idChannel)
+            : await this.channelsService.getChannel(idChannel)
+    }
+
     if (!channel) {
         throw new NotFoundException('Канал не найден')
     }
-    const likes = await this.channelsService.getLikesForChannel(Number(id))
-    return { channel, likes }   
-    }
+
+    const likes = await this.channelsService.getLikesForChannel(channel.id)   // ← от channel.id!
+    const isMine = channel.creatorId === CurrentUser.getInstance().id ? 1 : 0
+
+    return { ...channel, likes, isMine }
+}
+    /*
+    //получение канала без id
+    @ApiOperation({summary:"Получение канала без ID"})
+    @ApiOkResponse({description:"Вывод данных первого канала"})
+    @Get('feed')
+    async getFeedStart() {
+        const channel = await this.channelsService.getFirstFeedChannel()
+        const likes = await this.channelsService.getLikesForChannel(channel.id)
+        return { ...channel, likes }
+    }*/
+
+
 
     //выести каталог каналов с мин количеством подписчиков(может быть 0, выведем всех)
+    @ApiOperation({summary:"Вывод каталога каналов с фильтром"})
+    @ApiOkResponse({description:"Массив опубликованных услуг с признаком isMine'"})
     @Get()
     async getCatalog(@Query('minSubscribers') minSubscribers?: string){
         const minSubscribersChannel = minSubscribers === undefined ? undefined : Number(minSubscribers);
@@ -59,7 +101,12 @@ export class ApiController{
     }*/
 
     //создать черновик
-    @Post('add')
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Создание черновика канала' })
+    @ApiConsumes('multipart/form-data') 
+    @ApiBody({ description: 'Поля: name (строка), cover (файл), video (файл)' })
+    @UseGuards(AuthGuard)
+    @Post('add')//декоратор
     @UseInterceptors(
         FileFieldsInterceptor([//ожидаем multipart/form-data с полясм видео и фото по 1 шт
             /*
@@ -118,6 +165,10 @@ export class ApiController{
 //////////////////////////////////////////////////////////////////////Измененния//////////////////////////////////////////////////////////////////////////
 
     //опубликовать канал
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Публикация услуги (смена статуса)' })
+    @ApiOkResponse({ description: 'Опубликованный канал' })
+    @UseGuards(AuthGuard)
     @Put('publish')
     async changeStatusPublish(
     @Body() body: {
@@ -137,6 +188,10 @@ export class ApiController{
     }
 
     //удаление
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Удаление канала' })
+    @ApiOkResponse({ description: 'Сообщение об успехе' })
+    @UseGuards(AuthGuard)
     @Delete(':id')
     async deleteChannel(@Param('id') id : string, @Body() body : {}) {
         await this.channelsService.deleteChannel(Number(id));
@@ -144,6 +199,10 @@ export class ApiController{
     }
 
     //поставить лайк
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Поставить лайк каналу' })
+    @ApiOkResponse({ description: 'Количество лайков текущего канала' })
+    @UseGuards(AuthGuard)
     @Post(':id/like')
     async getLike(@Param('id') id:string, @Body() body: { value: 0|1}){
         const idChannel = Number(id)

@@ -10,7 +10,7 @@
   <div class="app-container">
     <div class="feed-page">
 
-      <video class="feed-video" src="{{channel.videoUrl}}" autoplay muted loop playsinline></video>
+      <video class="feed-video" src="{{fileUrl channel.videoUrl}}" autoplay muted loop playsinline></video>
       
       <div class="feed-side-actions">
         <button class="action-img" type="button">
@@ -19,6 +19,15 @@
           </svg>
           <span>{{likes}}</span>
         </button>
+        <div class="stat-badge">
+            <span class="stat-icon">👥</span>
+            <span><b>{{channel.subscribersCount}}</b></span>
+          </div>
+
+          <div class="stat-badge">
+            <span class="stat-icon">📊</span>
+            <span><b>{{channel.averageReach}}</b></span>
+          </div>
 
         <a href="/channels/feed/{{channel.id}}?next=true" class="action-img action-next" title="Следующий канал">
           <svg class="action-icon" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
@@ -32,16 +41,7 @@
 
       <div class="feed-overlay">
         <div class="channel-stats">
-          <div class="stat-badge">
-            <span class="stat-icon">👥</span>
-            <span>Подписчиков: <b>{{channel.subscribersCount}}</b></span>
-          </div>
-          <div class="stat-badge">
-            <span class="stat-icon">📊</span>
-            <span>Средний охват: <b>{{channel.averageReach}}</b></span>
-          </div>
         </div>
-
         <div class="feed-description">
           <span class="desc-text">{{channel.description}}</span>
           <a href="/channels/feed/{{channel.id}}?next=false" class="more-link">ещё</a>
